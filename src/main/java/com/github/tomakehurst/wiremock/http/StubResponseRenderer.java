@@ -103,6 +103,7 @@ public class StubResponseRenderer implements ResponseRenderer {
 				.statusMessage(responseDefinition.getStatusMessage())
                 .headers(headers)
                 .fault(responseDefinition.getFault())
+				.onServerEventController(responseDefinition.getOnServerEventController())
 				.configureDelay(
 					globalSettingsHolder.get().getFixedDelay(),
 					globalSettingsHolder.get().getDelayDistribution(),

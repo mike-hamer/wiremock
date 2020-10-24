@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.github.tomakehurst.wiremock.client.OnServerEventController;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.common.Errors;
 import com.github.tomakehurst.wiremock.common.Json;
@@ -54,6 +55,11 @@ public class ResponseDefinition {
     private String browserProxyUrl;
     private Boolean wasConfigured = true;
     private Request originalRequest;
+    private OnServerEventController onServerEventController;
+
+    public OnServerEventController getOnServerEventController() {
+        return onServerEventController;
+    }
 
     @JsonCreator
     public ResponseDefinition(@JsonProperty("status") int status,
@@ -71,8 +77,9 @@ public class ResponseDefinition {
                               @JsonProperty("fault") Fault fault,
                               @JsonProperty("transformers") List<String> transformers,
                               @JsonProperty("transformerParameters") Parameters transformerParameters,
-                              @JsonProperty("fromConfiguredStub") Boolean wasConfigured) {
-        this(status, statusMessage, Body.fromOneOf(null, body, jsonBody, base64Body), bodyFileName, headers, additionalProxyRequestHeaders, fixedDelayMilliseconds, delayDistribution, chunkedDribbleDelay, proxyBaseUrl, fault, transformers, transformerParameters, wasConfigured);
+                              @JsonProperty("fromConfiguredStub") Boolean wasConfigured,
+                              @JsonProperty("onServerEventController") OnServerEventController onServerEventController) {
+        this(status, statusMessage, Body.fromOneOf(null, body, jsonBody, base64Body), bodyFileName, headers, additionalProxyRequestHeaders, fixedDelayMilliseconds, delayDistribution, chunkedDribbleDelay, proxyBaseUrl, fault, transformers, transformerParameters, wasConfigured, onServerEventController);
     }
 
     public ResponseDefinition(int status,
@@ -90,8 +97,9 @@ public class ResponseDefinition {
                               Fault fault,
                               List<String> transformers,
                               Parameters transformerParameters,
-                              Boolean wasConfigured) {
-        this(status, statusMessage, Body.fromOneOf(body, null, jsonBody, base64Body), bodyFileName, headers, additionalProxyRequestHeaders, fixedDelayMilliseconds, delayDistribution, chunkedDribbleDelay, proxyBaseUrl, fault, transformers, transformerParameters, wasConfigured);
+                              Boolean wasConfigured,
+                              OnServerEventController onServerEventController) {
+        this(status, statusMessage, Body.fromOneOf(body, null, jsonBody, base64Body), bodyFileName, headers, additionalProxyRequestHeaders, fixedDelayMilliseconds, delayDistribution, chunkedDribbleDelay, proxyBaseUrl, fault, transformers, transformerParameters, wasConfigured, onServerEventController);
     }
 
     private ResponseDefinition(int status,
@@ -107,7 +115,8 @@ public class ResponseDefinition {
                                Fault fault,
                                List<String> transformers,
                                Parameters transformerParameters,
-                               Boolean wasConfigured) {
+                               Boolean wasConfigured,
+                               OnServerEventController onServerEventController) {
         this.status = status > 0 ? status : 200;
         this.statusMessage = statusMessage;
 
@@ -124,18 +133,19 @@ public class ResponseDefinition {
         this.transformers = transformers;
         this.transformerParameters = transformerParameters;
         this.wasConfigured = wasConfigured == null ? true : wasConfigured;
+        this.onServerEventController = onServerEventController;
     }
 
     public ResponseDefinition(final int statusCode, final String bodyContent) {
-        this(statusCode, null, Body.fromString(bodyContent), null, null, null, null, null, null, null, null, Collections.<String>emptyList(), Parameters.empty(), true);
+        this(statusCode, null, Body.fromString(bodyContent), null, null, null, null, null, null, null, null, Collections.<String>emptyList(), Parameters.empty(), true, null);
     }
 
     public ResponseDefinition(final int statusCode, final byte[] bodyContent) {
-        this(statusCode, null, Body.fromBytes(bodyContent), null, null, null, null, null, null, null, null, Collections.<String>emptyList(), Parameters.empty(), true);
+        this(statusCode, null, Body.fromBytes(bodyContent), null, null, null, null, null, null, null, null, Collections.<String>emptyList(), Parameters.empty(), true, null);
     }
 
     public ResponseDefinition() {
-        this(HTTP_OK, null, Body.none(), null, null, null, null, null, null, null, null, Collections.<String>emptyList(), Parameters.empty(), true);
+        this(HTTP_OK, null, Body.none(), null, null, null, null, null, null, null, null, Collections.<String>emptyList(), Parameters.empty(), true, null);
     }
 
     public static ResponseDefinition notFound() {
@@ -221,7 +231,8 @@ public class ResponseDefinition {
             this.fault,
             this.transformers,
             this.transformerParameters,
-            this.wasConfigured
+            this.wasConfigured,
+                this.onServerEventController
         );
         return newResponseDef;
     }

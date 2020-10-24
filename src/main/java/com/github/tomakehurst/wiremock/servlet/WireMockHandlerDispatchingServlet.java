@@ -15,6 +15,8 @@
  */
 package com.github.tomakehurst.wiremock.servlet;
 
+import com.github.tomakehurst.wiremock.client.OnServerEventController;
+import com.github.tomakehurst.wiremock.client.ServerEventController;
 import com.github.tomakehurst.wiremock.common.LocalNotifier;
 import com.github.tomakehurst.wiremock.common.Notifier;
 import com.github.tomakehurst.wiremock.core.FaultInjector;
@@ -216,17 +218,41 @@ public class WireMockHandlerDispatchingServlet extends HttpServlet {
         if (chunkedEncodingPolicy == NEVER || (chunkedEncodingPolicy == BODY_FILE && response.hasInlineBody())) {
             httpServletResponse.setContentLength(response.getBody().length);
         }
-
-        if (response.shouldAddChunkedDribbleDelay()) {
-			writeAndTranslateExceptionsWithChunkedDribbleDelay(httpServletResponse, response.getBodyStream(), response.getChunkedDribbleDelay());
-		} else {
-			writeAndTranslateExceptions(httpServletResponse, response.getBodyStream());
-		}
+        OnServerEventController onServerEventController = response.getOnServerEventController();
+        if (onServerEventController == null) {
+            if (response.shouldAddChunkedDribbleDelay()) {
+                writeAndTranslateExceptionsWithChunkedDribbleDelay(httpServletResponse, response.getBodyStream(), response.getChunkedDribbleDelay());
+            } else {
+                writeAndTranslateExceptions(httpServletResponse, response.getBodyStream());
+            }
+        } else {
+            streamAndTranslateExceptions(httpServletResponse, onServerEventController);
+        }
     }
 
 	private FaultInjector buildFaultInjector(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
 	    return faultHandlerFactory.buildFaultInjector(httpServletRequest, httpServletResponse);
 	}
+
+    private static void streamAndTranslateExceptions(HttpServletResponse httpServletResponse, OnServerEventController onServerEventController) {
+        try(
+                ServletOutputStream out = httpServletResponse.getOutputStream();
+        ) {
+            ServerEventController controller = new ServerEventController(out);
+            onServerEventController.controller(controller);
+//            String full = new String(content);
+//            String[] lines = full.split(System.lineSeparator());
+//            for (String line: lines) {
+//                out.write((line + System.lineSeparator()).getBytes());
+//                Thread.sleep(50L);
+//                out.flush();
+//            }
+//            out.flush();
+//            out.close();
+        } catch ( IOException e) {
+            throwUnchecked(e);
+        }
+    }
 
     private static void writeAndTranslateExceptions(HttpServletResponse httpServletResponse, InputStream content) {
         try (ServletOutputStream out = httpServletResponse.getOutputStream()) {

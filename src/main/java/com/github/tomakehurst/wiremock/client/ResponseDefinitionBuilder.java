@@ -48,6 +48,12 @@ public class ResponseDefinitionBuilder {
     protected List<String> responseTransformerNames;
     protected Map<String, Object> transformerParameters = newHashMap();
     protected Boolean wasConfigured = true;
+    protected OnServerEventController onServerEventController;
+
+    public ResponseDefinitionBuilder withOnServerEventController(OnServerEventController onServerEventController) {
+        this.onServerEventController = onServerEventController;
+        return this;
+    }
 
     public static ResponseDefinitionBuilder like(ResponseDefinition responseDefinition) {
         ResponseDefinitionBuilder builder = new ResponseDefinitionBuilder();
@@ -258,7 +264,8 @@ public class ResponseDefinitionBuilder {
                     fault,
                     responseTransformerNames,
                     transformerParameters,
-                    wasConfigured);
+                    wasConfigured,
+                    onServerEventController);
         }
         else if (isJsonBody()) {
             return new ResponseDefinition(
@@ -277,7 +284,7 @@ public class ResponseDefinitionBuilder {
                     fault,
                     responseTransformerNames,
                     transformerParameters,
-                    wasConfigured);
+                    wasConfigured, onServerEventController);
         } else {
             return new ResponseDefinition(
                     status,
@@ -295,7 +302,7 @@ public class ResponseDefinitionBuilder {
                     fault,
                     responseTransformerNames,
                     transformerParameters,
-                    wasConfigured);
+                    wasConfigured, onServerEventController);
         }
     }
 }

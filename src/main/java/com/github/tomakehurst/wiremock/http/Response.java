@@ -15,6 +15,7 @@
  */
 package com.github.tomakehurst.wiremock.http;
 
+import com.github.tomakehurst.wiremock.client.OnServerEventController;
 import com.github.tomakehurst.wiremock.common.BinaryFile;
 import com.github.tomakehurst.wiremock.common.InputStreamSource;
 import com.github.tomakehurst.wiremock.common.StreamSources;
@@ -40,8 +41,13 @@ public class Response {
 	private final boolean fromProxy;
 	private final long initialDelay;
     private final ChunkedDribbleDelay chunkedDribbleDelay;
+    private OnServerEventController onServerEventController;
 
-	public static Response notConfigured() {
+    public OnServerEventController getOnServerEventController() {
+        return onServerEventController;
+    }
+
+    public static Response notConfigured() {
         return new Response(
                 HTTP_NOT_FOUND,
                 null,
@@ -51,7 +57,7 @@ public class Response {
                 null,
                 0,
                 null,
-                false);
+                false, null);
     }
 
     public static Builder response() {
@@ -59,7 +65,7 @@ public class Response {
     }
 
     public Response(int status, String statusMessage, byte[] body, HttpHeaders headers, boolean configured, Fault fault, long initialDelay,
-                    ChunkedDribbleDelay chunkedDribbleDelay, boolean fromProxy) {
+                    ChunkedDribbleDelay chunkedDribbleDelay, boolean fromProxy, OnServerEventController onServerEventController) {
         this.status = status;
         this.statusMessage = statusMessage;
         this.bodyStreamSource = StreamSources.forBytes(body);
@@ -69,10 +75,11 @@ public class Response {
         this.initialDelay = initialDelay;
         this.chunkedDribbleDelay = chunkedDribbleDelay;
         this.fromProxy = fromProxy;
+        this.onServerEventController = onServerEventController;
     }
 
     public Response(int status, String statusMessage, InputStreamSource streamSource, HttpHeaders headers, boolean configured, Fault fault, long initialDelay,
-                    ChunkedDribbleDelay chunkedDribbleDelay, boolean fromProxy) {
+                    ChunkedDribbleDelay chunkedDribbleDelay, boolean fromProxy, OnServerEventController onServerEventController) {
         this.status = status;
         this.statusMessage = statusMessage;
         this.bodyStreamSource = streamSource;
@@ -82,10 +89,11 @@ public class Response {
         this.initialDelay = initialDelay;
         this.chunkedDribbleDelay = chunkedDribbleDelay;
         this.fromProxy = fromProxy;
+        this.onServerEventController = onServerEventController;
     }
 
     public Response(int status, String statusMessage, String body, HttpHeaders headers, boolean configured, Fault fault, long initialDelay,
-                    ChunkedDribbleDelay chunkedDribbleDelay, boolean fromProxy) {
+                    ChunkedDribbleDelay chunkedDribbleDelay, boolean fromProxy, OnServerEventController onServerEventController) {
         this.status = status;
         this.statusMessage = statusMessage;
         this.headers = headers;
@@ -95,6 +103,7 @@ public class Response {
         this.initialDelay = initialDelay;
         this.chunkedDribbleDelay = chunkedDribbleDelay;
         this.fromProxy = fromProxy;
+        this.onServerEventController = onServerEventController;
     }
 
 	public int getStatus() {
@@ -174,6 +183,11 @@ public class Response {
         private boolean fromProxy;
         private long initialDelay;
         private ChunkedDribbleDelay chunkedDribbleDelay;
+        private OnServerEventController onServerEventController;
+
+        public OnServerEventController getOnServerEventController() {
+            return onServerEventController;
+        }
 
         public static Builder like(Response response) {
             Builder responseBuilder = new Builder();
@@ -293,14 +307,19 @@ public class Response {
 
         public Response build() {
             if (bodyBytes != null) {
-                return new Response(status, statusMessage, bodyBytes, headers, configured, fault, initialDelay, chunkedDribbleDelay, fromProxy);
+                return new Response(status, statusMessage, bodyBytes, headers, configured, fault, initialDelay, chunkedDribbleDelay, fromProxy, onServerEventController);
             } else if (bodyString != null) {
-                return new Response(status, statusMessage, bodyString, headers, configured, fault, initialDelay, chunkedDribbleDelay, fromProxy);
+                return new Response(status, statusMessage, bodyString, headers, configured, fault, initialDelay, chunkedDribbleDelay, fromProxy, onServerEventController);
             } else if (bodyStream != null) {
-                return new Response(status, statusMessage, bodyStream, headers, configured, fault, initialDelay, chunkedDribbleDelay, fromProxy);
+                return new Response(status, statusMessage, bodyStream, headers, configured, fault, initialDelay, chunkedDribbleDelay, fromProxy, onServerEventController);
             } else {
-                return new Response(status, statusMessage, new byte[0], headers, configured, fault, initialDelay, chunkedDribbleDelay, fromProxy);
+                return new Response(status, statusMessage, new byte[0], headers, configured, fault, initialDelay, chunkedDribbleDelay, fromProxy,  onServerEventController);
             }
+        }
+
+        public Builder onServerEventController(OnServerEventController onServerEventController) {
+            this.onServerEventController = onServerEventController;
+            return this;
         }
     }
 
