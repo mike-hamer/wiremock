@@ -50,6 +50,7 @@ public class ResponseDefinition {
     private final Fault fault;
     private final List<String> transformers;
     private final Parameters transformerParameters;
+    private final String test;
 
     private String browserProxyUrl;
     private Boolean wasConfigured = true;
